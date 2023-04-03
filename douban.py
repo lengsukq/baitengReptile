@@ -38,7 +38,7 @@ headers = {
 def request_douban():
     page = 1
     # range(start, stop[, step])，分别是起始、终止和步长。
-    for i in range(0, 30, 30):
+    for i in range(0, 904, 30):
         print('开始爬取第 %s 页' % page)
 
         # format是python2新增的一个格式化字符串的方法，相对于老版的 % 格式方法，它有很多优点。
@@ -73,7 +73,6 @@ def download_picture(pic_l):
         os.mkdir(r'景甜Pic')
     for i in pic_l:
         pic = requests.get(i, headers=headers)
-        print('p_name前置参数', i.split('/'))
         p_name = i.split('/')[7]
         with open('景甜Pic\\' + p_name, 'wb') as f:
             f.write(pic.content)
