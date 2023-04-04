@@ -7,13 +7,26 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from time import sleep
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 # 加载json文件并读取
 def resolveJson():
     with open(r'C:\code\python-crawler\baiten.json', 'r', encoding='utf8') as fp:
         json_data = json.load(fp)
 
-    # 输出documents数组
     return json_data['cubePatentSearchResponse']['documents']
+
+def resolveJson2(info_list):
+    with open(r'C:\code\python-crawler\my_dict.json', 'r', encoding='utf8') as fp:
+        json_data2 = json.load(fp)
+
+
+    key = 0
+    # 两个dict合并为一个
+    for item in info_list:
+        item.update(json_data2['info'][key])
+        key = key + 1
+
+    return info_list
 
 def get_id_desAn(json_list):
     k = 0
@@ -31,8 +44,8 @@ def get_id_desAn(json_list):
     return info_list
 
 
-def create_excel(info_list):
-    print('数据长度', len(info_list))
+def create_excel(finish_info):
+    print('数据长度', len(finish_info))
     # 创建工作表
     workbook = xlsxwriter.Workbook(r'C:\code\python-crawler\baiten.xlsx')
     # 默认创建sheet1
@@ -41,61 +54,95 @@ def create_excel(info_list):
     worksheet.write(0, 0, '标题')  # 行号和列标均是从0开始
     worksheet.write(0, 1, '申请日')
     worksheet.write(0, 2, '授权公告日')
+    worksheet.write(0, 3, '技术价值')
+    worksheet.write(0, 4, '经济价值')
+    worksheet.write(0, 5, '法律价值')
+    worksheet.write(0, 6, '总分')
     k = 1
     worksheet.set_column(0, 0, 40)
     worksheet.set_column(2, 2, 20)
-    for item in info_list:
+    for item in finish_info:
         worksheet.write(k, 0, item['tittle'])
         worksheet.write(k, 1, item['application_date'])
         worksheet.write(k, 2, item['announcement_Day'])
+        worksheet.write(k, 3, item['jishu'])
+        worksheet.write(k, 4, item['jingji'])
+        worksheet.write(k, 5, item['falv'])
+        worksheet.write(k, 6, item['countVal'])
         k = k + 1
     workbook.close()
     print('代码结束')
 
+def get_value_info(info_list):
+    for item in info_list:
+        url = "https://www.baiten.cn/patent/detail/{}?sc=&fq=&type=&sort=&sortField=&q=%E5%94%90%E4%BA%BA%E7%A5%9E%E9%9B%86%E5%9B%A2&rows=100#1/{}/worth/index".format(item['desAn'], item[id])
 
-def get_patents_info():
-    print('专利信息获取')
-    # 登录时需要POST的数据
-    data = {'un': '13185503973',
-            'pw': 'heyyi128.',}
-    # 登录时表单提交到的地址（用开发者工具可以看到）
-    login_url = 'https://www.baiten.cn/sso/checkuser'
-
-    headers = {
-        'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.44'}
-    # 构造Session
-    session = requests.Session()
-    print('登录状况', session)
-    # 在session中发送登录请求，此后这个session里就存储了cookie
-    # 可以用print(session.cookies.get_dict())查看
-    resp = session.post(login_url, data)
-
+def get_edge_action(info_list):
+    options = webdriver.EdgeOptions()  # 自定义加载项
+    options.add_experimental_option("debuggerAddress", "127.0.0.1:9527") #本地监听edge浏览器
+    browser = webdriver.Edge(options=options)
     url = "https://www.baiten.cn/patent/detail/479706c8b89416e1bf1ec05d2d3d598e3591f56553a36d61?sc=&fq=&type=&sort=&sortField=&q=%E5%94%90%E4%BA%BA%E7%A5%9E%E9%9B%86%E5%9B%A2&rows=100#1/CN201310380651.3/worth/index"
-    # headers = {
-    # 'Accept':'*/*',
-    # 'Accept-Encoding':'gzip, deflate, br',
-    # 'Accept-Language':'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-    # 'Connection':'keep-alive',
-    # 'Host':'www.baiten.cn',
-    # 'Referer':'https://www.baiten.cn/patent/detail/479706c8b89416e1bf1ec05d2d3d598e3591f56553a36d61?sc=&fq=&type=&sort=&sortField=&q=%E5%94%90%E4%BA%BA%E7%A5%9E%E9%9B%86%E5%9B%A2&rows=100',
-    # 'sec-ch-ua-mobile':'?0',
-    # 'sec-ch-ua':'"Microsoft Edge";v="111", "Not(A:Brand";v="8", "Chromium";v="111"',
-    # 'sec-ch-ua-platform':'"Windows"',
-    # 'Sec-Fetch-Dest':'empty',
-    # 'Sec-Fetch-Mode':'cors',
-    # 'Sec-Fetch-Site':'same-origin',
-    # "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.44",
-    # "cookie":"yunsuo_session_verify=2eb3d7f8174e7e1d5a0927da41b9aaf1; JSESSIONID=CB1829DD7378E71F3E3697D2334635FD; zlcp202333=true; BSESSION=4df0fc142e35f61d51cc0b837a20352255ec4f68cf10dc14",
-    # }
-    res = session.get(url).text
-    content = BeautifulSoup(res, "html.parser")
-    data = content.find_all('div', attrs={'class': 'worth-part no-border'})
-    print('get_patents_info', data, content)
+    browser.get(url)
+    sleep(3)
+
+    scores_info = []
+    timecount = 1;
+    for item in info_list:
+        url = "https://www.baiten.cn/patent/detail/{}?sc=&fq=&type=&sort=&sortField=&q=%E5%94%90%E4%BA%BA%E7%A5%9E%E9%9B%86%E5%9B%A2&rows=100#1/{}/worth/index".format(item['desAn'], item['id'])
+        browser.get(url)
+        print('第{}次：'.format(timecount), url)
+        timecount = timecount+1
+        browser.implicitly_wait(60)
+        all_info = browser.find_elements(By.CSS_SELECTOR, '.m-detail-worth .worth-part .part-title')
+        countVal = browser.find_element(By.CSS_SELECTOR, 'body.minpix .u-worth-des p.count > span')
+        scores_info.append(
+            {
+                'jishu': all_info[0].text.split(' ')[4],
+                'jingji': all_info[1].text.split(' ')[4],
+                'falv': all_info[2].text.split(' ')[4],
+                'countVal': countVal.text
+            })
+        print(all_info[0].text.split(' ')[4], all_info[1].text.split(' ')[4], all_info[2].text.split(' ')[4], countVal.text)
+        sleep(3)
+
+
+    print('scores_info',scores_info)
+    with open(r"C:\code\python-crawler\my_dict.json", "w") as f:
+        json.dump({'info': scores_info}, f, ensure_ascii=False)
+        # 关闭文件
+        f.close()
+
+def test_url():
+    scores_info = []
+    options = webdriver.EdgeOptions()  # 自定义加载项，如限制图片加载，不打开浏览器窗口等操作
+    options.add_experimental_option("debuggerAddress", "127.0.0.1:9527")
+    browser = webdriver.Edge(options=options)
+    url = "https://www.baiten.cn/patent/detail/479706c8b89416e13d2b937ebd29e224eef46516d1a48964?sc=&fq=&type=&sort=&sortField=&q=%E5%94%90%E4%BA%BA%E7%A5%9E%E9%9B%86%E5%9B%A2&rows=100#1/CN201310380852.3/worth/index"
+    browser.get(url)
+    print(url)
+    browser.implicitly_wait(10)
+    print('加载完成')
+    all_info = browser.find_elements(By.CSS_SELECTOR,'.m-detail-worth .worth-part .part-title')
+    countVal = browser.find_element(By.CSS_SELECTOR,'body.minpix .u-worth-des p.count > span')
+    scores_info.append(
+        {
+            'jishu': all_info[0].text.split(' ')[4],
+            'jingji': all_info[1].text.split(' ')[4],
+            'falv': all_info[2].text.split(' ')[4],
+            'countVal': countVal.text
+        })
+    print('scores_info',scores_info)
 
 if __name__ == '__main__':
-    # print('开始解析')
-    # json_list = resolveJson()
-    # info_list = get_id_desAn(json_list)
-    # print('写入数据', info_list)
-    # create_excel(info_list)
-    get_patents_info()
+    print('开始解析')
+    # 解析数据
+    json_list = resolveJson()
+    # 处理数据，获取所有url的必要条件
+    info_list = get_id_desAn(json_list)
+    # 两个json文件数据合并
+    finish_info = resolveJson2(info_list)
+    # get_edge_action(info_list)
+
+    print('写入数据', finish_info)
+    create_excel(finish_info)
+    # test_url()
