@@ -6,6 +6,7 @@ from selenium import webdriver
 from time import sleep
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 def get_edge_action(num=2):
@@ -21,15 +22,19 @@ def get_edge_action(num=2):
 
     while nowNum < num:
         browser.get(url)
-        sleep(8)
+        browser.implicitly_wait(10)
         browser.find_element(By.XPATH, '/html/body/div[1]/div/main/div/div/div[2]/div[1]/input').send_keys(
             'baipiao9356')
         browser.find_element(By.XPATH, '/html/body/div/div/main/div/div/div[2]/div[1]/button').click()
-        sleep(8)
+        WebDriverWait(browser, 10).until(EC.visibility_of(
+            browser.find_element(By.XPATH, '/html/body/div/div/main/div/div/div[2]/div[2]/div[2]/div[2]/div[1]')))
+        print('折扣套餐', browser.find_element(By.XPATH, '/html/body/div/div/main/div/div/div[2]/div[2]/div[2]/div[2]/div[1]').text)
         browser.find_element(By.XPATH, '/html/body/div/div/main/div/div/div[2]/div[2]/button').click()
-        sleep(8)
+        WebDriverWait(browser, 10).until(EC.visibility_of(
+            browser.find_element(By.XPATH, '/html/body/div/div/main/div/div/div[1]/div[3]/div[2]/div[1]')))
         browser.find_element(By.XPATH, '/html/body/div/div/main/div/div/div[2]/div/button').click()
-        sleep(8)
+        WebDriverWait(browser, 10).until(EC.visibility_of(
+            browser.find_element(By.XPATH, '/html/body/div/div/main/div/div/div/div[1]/div/div/div[4]/button')))
         nowNum = nowNum + 1
 
 
