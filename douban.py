@@ -55,7 +55,6 @@ def request_douban():
         page += 1
         time.sleep(1)
 
-
 # 封装每一页获取图片的函数
 def get_poster_url(res):
     content = BeautifulSoup(res, "html.parser")
