@@ -43,5 +43,5 @@ def get_edge_action(num=2):
 
 if __name__ == '__main__':
     print('开始执行')
-    get_edge_action(90)
+    get_edge_action(600)
     print('结束')
