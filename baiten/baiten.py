@@ -1,9 +1,7 @@
 # 佰腾数据爬取
 import xlsxwriter
 import json
-import requests
 import os
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from time import sleep
 from selenium.webdriver.common.by import By
