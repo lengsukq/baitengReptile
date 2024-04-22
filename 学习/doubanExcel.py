@@ -1,8 +1,5 @@
 import douban
 import requests
-import xlrd as xl
-from pathlib2 import Path
-from bs4 import BeautifulSoup
 import xlsxwriter
 import time
 
