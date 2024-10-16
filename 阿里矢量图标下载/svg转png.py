@@ -8,7 +8,7 @@ def svg_to_png(obj):
     font_class = obj["font_class"]
     # SVG代码转换为PNG图片，并将文件名设置为JSON对象中的font_class属性
     file_name = f"./png/{font_class}.png"
-    cairosvg.svg2png(bytestring=svg_code.encode('utf-8'), write_to=file_name)
+    cairosvg.svg2png(bytestring=svg_code.encode('utf-8'), write_to=file_name, scale=3.0, output_width=50, output_height=50)
 
 
 def check_duplicate_filenames(data_list):
